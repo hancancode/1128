@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>커서 결계</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .block-1 {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background-image: url('./img/1.png');
+      background-size: cover;
+      transition: transform 0.2s;
+      z-index: 10;
+    }
+    .block-2, .block-3 {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-size: cover;
+    }
+    .block-2 {
+      background-image: url('./img/2.png');
+    }
+    .block-3 {
+      background-image: url('./img/3.png');
+    }
+  </style>
+</head>
+<body>
+  <div class="container"></div>
+  <script>
+    const container = document.querySelector('.container');
+    const block1Size = 70;
+    const radius = 200;
+    const block2Size = 100;
+    const rows = Math.ceil(window.innerHeight / block1Size);
+    const cols = Math.ceil(window.innerWidth / block1Size);
+
+    // 1.png 블록 추가
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const block1 = document.createElement('div');
+        block1.className = 'block-1';
+        block1.style.left = `${x * block1Size}px`;
+        block1.style.top = `${y * block1Size}px`;
+        container.appendChild(block1);
+      }
+    }
+
+    // 2.png 블록 추가
+    const block2Count = 100; // 화면에 나타날 2.png 블록 개수
+    const block2Positions = [];
+    for (let i = 0; i < block2Count; i++) {
+      const block2 = document.createElement('div');
+      block2.className = 'block-2';
+      const posX = Math.random() * (window.innerWidth - block2Size);
+      const posY = Math.random() * (window.innerHeight - block2Size);
+      block2.style.left = `${posX}px`;
+      block2.style.top = `${posY}px`;
+      container.appendChild(block2);
+      block2Positions.push({ x: posX, y: posY });
+    }
+
+    // 3.png 블록을 랜덤한 2.png 사이에 삽입
+    const randomIndex = Math.floor(Math.random() * block2Count);
+    const block3 = document.createElement('div');
+    block3.className = 'block-3';
+    block3.style.left = `${block2Positions[randomIndex].x}px`;
+    block3.style.top = `${block2Positions[randomIndex].y}px`;
+    container.appendChild(block3);
+
+    // 3.png 반경 100px 안의 2.png 숨기기
+    const block3X = block2Positions[randomIndex].x + block2Size / 2;
+    const block3Y = block2Positions[randomIndex].y + block2Size / 2;
+    const hideRadius = 100;
+
+    document.querySelectorAll('.block-2').forEach(block2 => {
+      const block2Rect = block2.getBoundingClientRect();
+      const block2X = block2Rect.left + block2Size / 2;
+      const block2Y = block2Rect.top + block2Size / 2;
+
+      const dx = block3X - block2X;
+      const dy = block3Y - block2Y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < hideRadius) {
+        block2.style.visibility = 'hidden';
+      }
+    });
+
+
+    // 커서 이동 시 1.png 밀어내기
+    window.addEventListener('mousemove', (e) => {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      document.querySelectorAll('.block-1').forEach(block => {
+        const blockRect = block.getBoundingClientRect();
+        const blockX = blockRect.left + block1Size / 2;
+        const blockY = blockRect.top + block1Size / 2;
+
+        const dx = blockX - mouseX;
+        const dy = blockY - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < radius) {
+          const angle = Math.atan2(dy, dx);
+          const offsetX = Math.cos(angle) * (radius - distance);
+          const offsetY = Math.sin(angle) * (radius - distance);
+
+          block.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        } else {
+          block.style.transform = 'translate(0, 0)';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
